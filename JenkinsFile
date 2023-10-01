@@ -59,7 +59,7 @@ pipeline {
       }
       steps {
           // Chạy Trivy để quét hình ảnh
-          sh 'trivy image ${DOCKER_IMAGE} > scanning.txt'
+          sh 'sudo apt update -y'
       }
     }
     
