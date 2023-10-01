@@ -59,7 +59,7 @@ pipeline {
       }
       steps {
           // Chạy Trivy để quét hình ảnh
-          sh 'sudo apt update -y'
+          sh 'apt update -y'
       }
     }
     
