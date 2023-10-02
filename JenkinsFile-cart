@@ -1,0 +1,62 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        sh 'echo passed'
+      }
+    }
+       
+    stage('BUILD and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE = "0914818516/cart:${BUILD_NUMBER}"
+        REGISTRY_CREDENTIALS = credentials('docker-cred')
+      }
+      steps {
+        script {
+            sh 'docker build -t ${DOCKER_IMAGE} .'
+            def dockerImage = docker.image("${DOCKER_IMAGE}")
+            docker.withRegistry('https://registry.hub.docker.com', "docker-cred") {
+                dockerImage.push()
+            }
+        }
+      }
+    }
+    
+    stage('Scan Docker Image with Trivy') {
+      environment {
+        DOCKER_IMAGE = "0914818516/cart:${BUILD_NUMBER}"
+      }
+      steps {
+          // Chạy Trivy để quét hình ảnh
+          sh 'trivy image --exit-code 0 --severity HIGH ${DOCKER_IMAGE} '
+      }
+    }
+    stage('Cleanup Workspace') {
+          steps {
+            deleteDir()
+          }
+        }
+    
+    stage('Update Deployment File') {
+        environment {
+            GIT_REPO_NAME = "cart-microservice-private"
+            GIT_USER_NAME = "TranNhatMinh23"
+        }
+        steps {
+            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                sh '''
+		    git config user.email "trannhatminh23082001@gmail.com"
+                    git config user.name "TranNhatMinh23"
+		    BUILD_NUMBER=${BUILD_NUMBER}
+		    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
+                    sed -i "s/image:.*/image: 0914818516\\/cart:${BUILD_NUMBER}/" manifest/deployment.yml
+                    git add manifest/deployment.yml
+                    git commit -m "Update cart image to version ${BUILD_NUMBER}"
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                '''
+            }
+        }
+    }
+  }
+}

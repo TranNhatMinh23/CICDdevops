@@ -1,21 +1,36 @@
+apiVersion: "v1" 
+kind: "Service"
+metadata:
+  labels:
+    app: "cart-ui"
+  name: "cart"
+spec:
+  ports:
+  - name: "http"
+    port: 1004
+    targetPort: 1004
+  selector:
+    app: "cart-ui" 
+---  
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spring-boot-app
-  labels:
-    app: spring-boot-app
+  name: "cart-ui"
+  labels: 
+    app: cart-ui
 spec:
-  replicas: 2
+  replicas: 1
   selector:
-    matchLabels:
-      app: spring-boot-app
+      matchLabels:
+        app: "cart-ui"
   template:
     metadata:
       labels:
-        app: spring-boot-app
+        app: cart-ui
     spec:
       containers:
-      - name: spring-boot-app
-        image: 0914818516/ultimate-cicd-pipeline:2
-        ports:
-        - containerPort: 8080
+        - name: "cart-ui"
+          image: "0914818516/cart"
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 1004
