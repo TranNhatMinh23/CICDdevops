@@ -6,7 +6,7 @@ pipeline {
     }
   }
   
-    
+  stages {
     stage('Update Deployment File') {
         environment {
             GIT_REPO_NAME = "CICDdevops"
